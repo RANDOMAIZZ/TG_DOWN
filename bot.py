@@ -204,12 +204,33 @@ def extract_vk_token_from_url(text: str) -> str:
 @app.on_message(filters.command("start"))
 async def start_cmd(client, msg):
     await msg.reply_text(
-        f"{EMOJIS['success']} *VideoBot — твой личный медиа-киллер!*\n\n"
-        "Кидай ссылку — я сам разберусь, что с ней делать.\n"
-        "\U0001f5ff YouTube, Twitch, TikTok, Twitter/X, VK, Instagram и ещё 12+ платформ.\n"
-        "\U0001f511 VK: пришли ссылку с access_token или `/login vk_token <токен>`\n"
-        "\U0001f36a Instagram/TikTok: положи cookies в папку `cookies/`\n"
-        "\U0001f680 Погнали!",
+        f"{EMOJIS['success']} *VideoBot вЂ” С‚РІРѕР№ Р»РёС‡РЅС‹Р№ РјРµРґРёР°-РєРёР»Р»РµСЂ!*\n\n"
+        "РљРёРґР°Р№ СЃСЃС‹Р»РєСѓ вЂ” СЏ СЃР°Рј СЂР°Р·Р±РµСЂСѓСЃСЊ, С‡С‚Рѕ СЃ РЅРµР№ РґРµР»Р°С‚СЊ.\n"
+        "\n"
+        "`YouTube (+Shorts)  \u2192 \u0432\u0438\u0434\u0435\u043e/\u0430\u0443\u0434\u0438\u043e`\n"
+        "`TikTok (+\u0444\u043e\u0442\u043e)    \u2192 \u0432\u0438\u0434\u0435\u043e`\n"
+        "`Twitch              \u2192 \u0432\u0438\u0434\u0435\u043e`\n"
+        "`Twitter / X         \u2192 \u0432\u0438\u0434\u0435\u043e`\n"
+        "`VK                  \u2192 \u0432\u0438\u0434\u0435\u043e`\n"
+        "`VK Music            \u2192 \u0430\u0443\u0434\u0438\u043e`\n"
+        "`OK (\u041e\u0434\u043d\u043e\u043a\u043b\u0430\u0441\u0441\u043d\u0438\u043a\u0438) \u2192 \u0432\u0438\u0434\u0435\u043e`\n"
+        "`Instagram           \u2192 \u0432\u0438\u0434\u0435\u043e/\u0444\u043e\u0442\u043e`\n"
+        "`Rutube              \u2192 \u0432\u0438\u0434\u0435\u043e`\n"
+        "`SoundCloud          \u2192 \u0430\u0443\u0434\u0438\u043e`\n"
+        "`Yandex Music        \u2192 \u0430\u0443\u0434\u0438\u043e`\n"
+        "`Spotify             \u2192 \u0430\u0443\u0434\u0438\u043e`\n"
+        "`Deezer              \u2192 \u0430\u0443\u0434\u0438\u043e`\n"
+        "`Pornhub             \u2192 \u0432\u0438\u0434\u0435\u043e`\n"
+        "`XVideos             \u2192 \u0432\u0438\u0434\u0435\u043e`\n"
+        "`Pinterest           \u2192 \u0432\u0438\u0434\u0435\u043e/\u0438\u0437\u043e\u0431\u0440\u0430\u0436\u0435\u043d\u0438\u044f`\n"
+        "`Yandex Disk         \u2192 \u0444\u0430\u0439\u043b\u044b/\u0432\u0438\u0434\u0435\u043e`\n"
+        "`Google Drive        \u2192 \u0444\u0430\u0439\u043b\u044b/\u0432\u0438\u0434\u0435\u043e`\n"
+        "`Telegram \u043a\u0440\u0443\u0436\u043e\u0447\u043a\u0438 \u2192 \u043e\u0431\u044b\u0447\u043d\u043e\u0435 \u0432\u0438\u0434\u0435\u043e`\n"
+        "`Telegram \u0433\u043e\u043b\u043e\u0441\u043e\u0432\u044b\u0435 \u2192 MP3`\n"
+        "\n"
+        "\U0001f511 VK: РїСЂРёС€Р»Рё СЃСЃС‹Р»РєСѓ СЃ access_token РёР»Рё `/login vk_token <С‚РѕРєРµРЅ>`\n"
+        "\U0001f36a Instagram/TikTok: РїРѕР»РѕР¶Рё cookies РІ РїР°РїРєСѓ `cookies/`\n"
+        "\U0001f680 РџРѕРіРЅР°Р»Рё!",
         parse_mode=enums.ParseMode.MARKDOWN,
     )
 

@@ -306,6 +306,37 @@ async def handle_video_note(client, msg):
         except Exception:
             pass
 
+
+@app.on_message(filters.voice)
+async def handle_voice(client, msg):
+    if ALLOWED_USERS and msg.from_user.id not in ALLOWED_USERS:
+        return
+    status = await msg.reply_text(f"{chr(128266)} *VideoBot* \u2192 \u0441\u043a\u0430\u0447\u0438\u0432\u0430\u044e \u0433\u043e\u043b\u043e\u0441\u043e\u0432\u043e\u0435...")
+    src = TEMP_DIR + "/" + str(uuid.uuid4()) + ".ogg"
+    dst = TEMP_DIR + "/" + str(uuid.uuid4()) + ".mp3"
+    try:
+        filepath = await msg.download(file_name=src)
+        if not filepath:
+            await status.edit_text("\u274c \u041d\u0435 \u0443\u0434\u0430\u043b\u043e\u0441\u044c \u0441\u043a\u0430\u0447\u0430\u0442\u044c")
+            return
+        await status.edit_text(f"{chr(128266)} \u041a\u043e\u043d\u0432\u0435\u0440\u0442\u0438\u0440\u0443\u044e \u0432 MP3...")
+        import subprocess
+        subprocess.run(["ffmpeg", "-y", "-i", src, "-codec:a", "libmp3lame", "-qscale:a", "2", dst], capture_output=True, timeout=120)
+        if not os.path.isfile(dst):
+            await status.edit_text("\u274c \u041d\u0435 \u0443\u0434\u0430\u043b\u043e\u0441\u044c \u043a\u043e\u043d\u0432\u0435\u0440\u0442\u0438\u0440\u043e\u0432\u0430\u0442\u044c")
+            return
+        await status.edit_text(f"{chr(128228)} \u041e\u0442\u043f\u0440\u0430\u0432\u043b\u044f\u044e MP3...")
+        await msg.reply_audio(audio=dst)
+    except Exception as e:
+        await status.edit_text(f"\u274c \u041e\u0448\u0438\u0431\u043a\u0430: {e}")
+    else:
+        await status.delete()
+    finally:
+        for f in (src, dst):
+            try:
+                os.remove(f)
+            except Exception:
+                pass
 # ?????? Message Handler (URL processing) ??????
 
 def build_quality_keyboard(formats: list) -> InlineKeyboardMarkup:

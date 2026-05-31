@@ -212,7 +212,6 @@ async def start_cmd(client, msg):
         "\U0001f680 Погнали!",
         parse_mode=enums.ParseMode.MARKDOWN,
     )
-    )
 
 
 @app.on_message(filters.command("help"))
@@ -284,6 +283,28 @@ async def logout_cmd(client, msg):
                 parse_mode=enums.ParseMode.MARKDOWN,
             )
 
+
+@app.on_message(filters.video_note)
+async def handle_video_note(client, msg):
+    if ALLOWED_USERS and msg.from_user.id not in ALLOWED_USERS:
+        return
+    status = await msg.reply_text(f"{chr(128229)} *VideoBot* \u2192 \u0441\u043a\u0430\u0447\u0438\u0432\u0430\u044e \u043a\u0440\u0443\u0436\u043e\u0447\u0435\u043a...")
+    try:
+        filepath = await msg.download(file_name=TEMP_DIR + "/")
+        if not filepath:
+            await status.edit_text("\u274c \u041d\u0435 \u0443\u0434\u0430\u043b\u043e\u0441\u044c \u0441\u043a\u0430\u0447\u0430\u0442\u044c")
+            return
+        await status.edit_text(f"{chr(128228)} \u041e\u0442\u043f\u0440\u0430\u0432\u043b\u044f\u044e \u043a\u0430\u043a \u0432\u0438\u0434\u0435\u043e...")
+        await msg.reply_video(video=filepath, supports_streaming=True)
+    except Exception as e:
+        await status.edit_text(f"\u274c \u041e\u0448\u0438\u0431\u043a\u0430: {e}")
+    else:
+        await status.delete()
+    finally:
+        try:
+            os.remove(filepath)
+        except Exception:
+            pass
 
 # ?????? Message Handler (URL processing) ??????
 

@@ -6,5 +6,6 @@ curl-cffi>=0.15.0
 deezer-py
 deemix
 mutagen
+spotiflac
 # tgcrypto ускоряет Pyrogram (на Python 3.11 собирается):
 # pip install tgcrypto

@@ -15,7 +15,17 @@ if [ -d /data ]; then
 fi
 
 # Start Tor for YouTube IP bypass
-tor --RunAsDaemon 1 2>/dev/null || true
-sleep 3
+tor --RunAsDaemon 1 --DataDirectory /tmp/tor --User root 2>/dev/null || true
+
+# Wait for Tor to be ready (up to 30s)
+echo "[start.sh] Waiting for Tor bootstrap..."
+for i in 0 1 2 3 4 5 6 7 8 9; do
+    sleep 3
+    if curl --socks5 127.0.0.1:9050 --max-time 3 https://check.torproject.org/api/ip 2>/dev/null | grep -q IsTor; then
+        echo "[start.sh] Tor ready"
+        break
+    fi
+    echo "[start.sh] Tor not ready yet ($((i+1))*3s)"
+done
 
 PYTHONUNBUFFERED=1 exec python bot.py

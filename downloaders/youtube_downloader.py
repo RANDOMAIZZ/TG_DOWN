@@ -149,6 +149,46 @@ class YouTubeDownloader(BaseDownloader):
 
         return {'error': last_error or 'All configs failed', 'formats': []}
 
+    async def _download_progress(self, args: list, progress_queue, timeout: int = 120) -> None:
+        pt = 'json:{"s":"%(progress.status)s","d":"%(progress.downloaded_bytes)s","t":"%(progress.total_bytes)s","sp":"%(progress.speed)s","e":"%(progress.eta)s"}'
+        cmd = self._base_cmd() + ['--progress-template', pt, '-q'] + args
+        proc = await asyncio.create_subprocess_exec(
+            *cmd, stdout=asyncio.subprocess.DEVNULL, stderr=asyncio.subprocess.PIPE
+        )
+        loop = asyncio.get_event_loop()
+        try:
+            while True:
+                line = await asyncio.wait_for(proc.stderr.readline(), timeout=timeout)
+                if not line:
+                    break
+                raw = line.decode('utf-8', errors='replace').strip()
+                if raw.startswith('{"s"'):
+                    try:
+                        data = json.loads(raw)
+                        d = data.get('d', '0')
+                        t = data.get('t', '0')
+                        sp = data.get('sp', '0')
+                        downloaded = int(d) if d not in ('None', '') else 0
+                        total = int(t) if t not in ('None', '') else 0
+                        speed = int(sp) if sp not in ('None', '') else 0
+                        if progress_queue and total > 0:
+                            progress_queue.put_nowait({
+                                'stage': 'download',
+                                'current': downloaded,
+                                'total': total,
+                                'fragment': 0,
+                                'fragments': 1,
+                                'speed': f'{(speed / 1024 / 1024):.1f} MB/s' if speed else '',
+                            })
+                    except Exception:
+                        pass
+            ret = await proc.wait()
+        except asyncio.TimeoutError:
+            proc.kill()
+            raise Exception(f'yt-dlp timeout ({timeout}s)')
+        if ret != 0:
+            raise Exception(f'exit code {ret}')
+
     async def download(self, url: str, format_id: str, progress_queue=None) -> tuple:
         print(f'[YT] download: format={format_id}, url={url[:60]}')
         outtmpl, tag = self.unique_outtmpl()
@@ -165,7 +205,7 @@ class YouTubeDownloader(BaseDownloader):
         last_error = ''
         for cfg in configs:
             try:
-                await self._run_yt(cfg['args'], timeout=120)
+                await self._download_progress(cfg['args'], progress_queue, timeout=120)
                 filepath = self._find_file(tag)
                 if filepath:
                     try:

@@ -1,0 +1,7 @@
+pyrogram==2.0.106
+yt-dlp>=2024.12.0
+requests
+certifi>=2024.0.0
+curl-cffi>=0.15.0
+# tgcrypto ускоряет Pyrogram (на Python 3.14 может не собраться):
+# pip install tgcrypto

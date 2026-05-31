@@ -1,0 +1,31 @@
+services:
+  - type: worker
+    name: telegram-video-bot
+    runtime: docker
+    repo: https://github.com/ВАШ_АККАУНТ/telegram_video_bot
+    branch: main
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: API_ID
+        sync: false
+      - key: API_HASH
+        sync: false
+      - key: BOT_TOKEN
+        sync: false
+      - key: VK_LOGIN
+        sync: false
+      - key: VK_PASSWORD
+        sync: false
+      - key: DEEZER_ARL
+        sync: false
+      # Настройки (можно менять)
+      - key: TEMP_DIR
+        value: /data/downloads
+      - key: VK_AUTH_FILE
+        value: /data/vk_auth.json
+      - key: VK_COOKIES_FILE
+        value: /data/vk_cookies.txt
+    disk:
+      name: data
+      mountPath: /data
+      sizeGB: 1

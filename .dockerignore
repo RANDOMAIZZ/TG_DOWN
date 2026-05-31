@@ -1,0 +1,17 @@
+venv/
+__pycache__/
+*.pyc
+.vscode/
+.git/
+README.md
+install.bat
+run.bat
+*.session
+*.session-journal
+vk_auth.json
+vk_cookies.txt
+vk.com_cookies.txt
+cookies/*.txt
+working_sites.json
+test_*.py
+downloads/

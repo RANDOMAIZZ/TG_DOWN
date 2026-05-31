@@ -44,6 +44,15 @@ class YouTubeDownloader(BaseDownloader):
         print(f"[YT] detect_url({url[:60]}): {found}")
         return found
 
+    def _build_fallback_formats(self):
+        return [
+            {'format_id': '2160p', 'quality': '2160p', 'height': 2160},
+            {'format_id': '1080p', 'quality': '1080p', 'height': 1080},
+            {'format_id': '720p', 'quality': '720p', 'height': 720},
+            {'format_id': '480p', 'quality': '480p', 'height': 480},
+            {'format_id': '360p', 'quality': '360p', 'height': 360},
+        ]
+
     async def get_info(self, url: str) -> Dict:
         is_short = '/shorts/' in url.lower()
         print(f"[YT] get_info: {url[:60]} (shorts={is_short})")
@@ -51,7 +60,8 @@ class YouTubeDownloader(BaseDownloader):
         try:
             info = await self.ytdlp_get_info(url, cookiefile=self.cookiefile, extra=self._yt_extra())
             if not info:
-                return {'error': 'Не удалось получить информацию', 'formats': []}
+                return {'platform': 'youtube', 'title': 'YouTube Video', 'duration': 0,
+                        'is_short': is_short, 'formats': self._build_fallback_formats()}
 
             title = info.get('title', 'video')
             duration = info.get('duration', 0)
@@ -59,25 +69,23 @@ class YouTubeDownloader(BaseDownloader):
             if is_short:
                 return {
                     'platform': 'youtube_shorts',
-                    'title': title,
-                    'duration': duration,
-                    'is_short': True,
+                    'title': title, 'duration': duration, 'is_short': True,
                     'formats': [{'format_id': 'best', 'quality': 'Auto'}],
                     'artist': info.get('artist') or info.get('channel', '') or info.get('uploader', ''),
                     'track': info.get('track') or title,
                 }
 
             formats = self.parse_video_formats(info)
+            if not formats:
+                formats = self._build_fallback_formats()
             return {
-                'platform': 'youtube',
-                'title': title,
-                'duration': duration,
-                'is_short': False,
-                'formats': formats,
+                'platform': 'youtube', 'title': title, 'duration': duration,
+                'is_short': False, 'formats': formats,
             }
         except Exception as e:
             print(f"[YT] get_info error: {e}")
-            return {'error': str(e), 'formats': []}
+            return {'platform': 'youtube', 'title': 'YouTube Video', 'duration': 0,
+                    'is_short': is_short, 'formats': self._build_fallback_formats()}
 
     async def download(self, url: str, format_id: str, progress_queue=None) -> tuple:
         print(f"[YT] download: format={format_id}, url={url[:60]}")

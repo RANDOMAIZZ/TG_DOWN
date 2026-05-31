@@ -176,7 +176,7 @@ class BaseDownloader(ABC):
             opts['merge_output_format'] = 'mp4'
             print(f"[Base] build_ydl_opts: best, format={opts['format']}")
         else:
-            opts['format'] = f'{format_id}+bestaudio/best[ext=mp4]/best'
+            opts['format'] = f'{format_id}+bestaudio/{format_id}/bestvideo+bestaudio/best[ext=mp4]/best'
             opts['merge_output_format'] = 'mp4'
             print(f"[Base] build_ydl_opts: custom format_id={format_id}, format={opts['format']}")
 

@@ -1,6 +1,10 @@
 from .base import BaseDownloader
 from typing import Dict
 import os
+import base64
+
+
+YT_COOKIES_PATH = '/tmp/yt_cookies.txt'
 
 
 class YouTubeDownloader(BaseDownloader):
@@ -8,13 +12,31 @@ class YouTubeDownloader(BaseDownloader):
     def __init__(self, temp_dir: str, cookiefile: str = '', cookies_browser: str = ''):
         super().__init__(temp_dir, cookiefile)
         self.cookies_browser = cookies_browser
+        self._loaded_cookies = False
+
+        # Пытаемся загрузить куки из переменной окружения (Render)
+        raw = os.environ.get('YOUTUBE_COOKIES')
+        if raw:
+            try:
+                data = base64.b64decode(raw)
+                with open(YT_COOKIES_PATH, 'wb') as f:
+                    f.write(data)
+                self.cookiefile = YT_COOKIES_PATH
+                self._loaded_cookies = True
+                print(f"[YT] Cookies loaded from env -> {YT_COOKIES_PATH} ({len(data)} bytes)")
+            except Exception as e:
+                print(f"[YT] Failed to load cookies from env: {e}")
 
     def _yt_extra(self) -> dict:
+        # Если куки загружены — ничего не делаем, yt-dlp использует default web client
+        if self._loaded_cookies:
+            return {}
         if self.cookiefile and self.resolve_cookiefile(self.cookiefile):
             return {}
         if self.cookies_browser:
             print(f"[YT] cookies file not found, trying --cookies-from-browser {self.cookies_browser}")
             return {'cookiesfrombrowser': (self.cookies_browser, None, None, None)}
+        # Firefox на локальном ПК
         prof = os.path.expanduser('~\\AppData\\Roaming\\Mozilla\\Firefox\\Profiles')
         if os.path.isdir(prof):
             for entry in os.listdir(prof):

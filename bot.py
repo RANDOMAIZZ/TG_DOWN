@@ -37,24 +37,6 @@ from downloaders import (
 )
 from downloaders.vk_session import is_vk_music_url, is_vk_url
 
-# ── Восстановление кук из переменных окружения ──
-_COOKIE_ENV_MAP = [
-    (YOUTUBE_COOKIES_FILE, 'YOUTUBE_COOKIES'),
-    (VK_COOKIES_FILE, 'VK_COOKIES'),
-]
-for fpath, env_name in _COOKIE_ENV_MAP:
-    content_b64 = os.environ.get(env_name)
-    if content_b64:
-        try:
-            import base64
-            resolved = resolve_path(fpath)
-            os.makedirs(os.path.dirname(resolved), exist_ok=True)
-            with open(resolved, 'wb') as f:
-                f.write(base64.b64decode(content_b64))
-            print(f"[Boot] Cookies restored: {resolved}")
-        except Exception as e:
-            print(f"[Boot] Cookies restore error for {env_name}: {e}")
-
 EMOJIS = {
     'success': '\u2705', 'error': '\u274c', 'info': '\u2139\ufe0f',
     'download': '\u2b07\ufe0f', 'music': '\ud83c\udfb5', 'video': '\ud83c\udfac',

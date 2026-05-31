@@ -8,3 +8,4 @@ deemix
 mutagen
 spotiflac
 tgcrypto
+python-dotenv>=1.0.0

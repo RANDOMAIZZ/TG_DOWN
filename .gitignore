@@ -4,15 +4,31 @@ __pycache__/
 *.pyd
 .Python
 .env
-downloads/*.mp4
-downloads/*.webm
-downloads/*.mp3
+downloads/
 *.log
 .DS_Store
 *.db
 config_local.py
-downloads/
+
+# Secrets and credentials
+config.py
 vk_cookies.txt
 vk.com_cookies.txt
+vk_auth.json
+www.youtube.com_cookies.txt
+cookies_b64.txt
+
+# Session files
+*.session
+*.session-journal
+
+# Virtual environment
+venv/
+.venv/
+
+# Generated data
+working_sites.json
+
+# Cookie directories
 cookies/*.txt
 !cookies/.gitkeep

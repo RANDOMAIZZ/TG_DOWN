@@ -818,7 +818,7 @@ if __name__ == '__main__':
     _cleanup_temp_dir()
     print("[VideoBot] Bot started! MTProto (2 GB limit)")
 
-    # health check for Render
+    # health check (Render / Hetzner)
     try:
         _srv = http.server.HTTPServer(("0.0.0.0", 10000), _H)
         threading.Thread(target=_srv.serve_forever, daemon=True).start()

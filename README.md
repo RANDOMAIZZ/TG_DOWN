@@ -73,21 +73,22 @@ pip install -r requirements.txt
 - Переоткройте терминал
 - `pip install -r requirements.txt`
 
-### 2.5. Настроить `config.py`
+### 2.5. Настроить `.env`
 
-Откройте `config.py` и замените значения на свои:
+Скопируйте `.env.example` в `.env` и заполните свои данные:
 
-```python
-API_ID = int(os.getenv('API_ID', 'ВАШ_API_ID'))
-API_HASH = os.getenv('API_HASH', 'ВАШ_API_HASH')
-BOT_TOKEN = os.getenv('BOT_TOKEN', 'ВАШ_BOT_TOKEN')
+```bash
+copy .env.example .env
 ```
 
-Если планируете VK-музыку — укажите логин/пароль:
-```python
-VK_LOGIN = os.getenv('VK_LOGIN', '+79123456789')
-VK_PASSWORD = os.getenv('VK_PASSWORD', 'ваш_пароль')
+Отредактируйте `.env`:
 ```
+API_ID=ВАШ_API_ID
+API_HASH=ВАШ_API_HASH
+BOT_TOKEN=ВАШ_BOT_TOKEN
+```
+
+**Важно:** `config.py` больше не содержит секретов — все данные читаются из `.env` или переменных окружения. Это безопасно для публичного репозитория.
 
 ### 2.6. Запустить бота
 
@@ -104,85 +105,42 @@ python bot.py
 
 ---
 
-## 3. Деплой на Render.com
+## 3. Деплой на сервер (Hetzner / VPS)
 
-**Сайт:** https://render.com
+Бот запускается через Docker. Подготовьте сервер с Docker Engine.
 
-### 3.1. Залить код на GitHub
+### 3.1. Клонировать репозиторий
 
 ```bash
-git init
-git add .
-git commit -m "init"
-git remote add origin https://github.com/ВАШ_АККАУНТ/telegram_video_bot.git
-git push -u origin main
+git clone https://github.com/ВАШ_АККАУНТ/telegram_video_bot.git
+cd telegram_video_bot
 ```
 
-### 3.2. Удалить секреты из `config.py` перед пушем
+### 3.2. Создать `.env` с секретами
 
-**Важно:** в `config.py` лежат ваши токены. Чтобы не светить их в репозитории:
+Скопируйте `.env.example` в `.env` и вставьте свои токены (API_ID, API_HASH, BOT_TOKEN и опциональные данные).
 
-**Вариант А — очистить значения по умолчанию (рекомендуется):**
-```python
-API_ID = int(os.getenv('API_ID'))
-API_HASH = os.getenv('API_HASH')
-BOT_TOKEN = os.getenv('BOT_TOKEN')
-```
-Все значения будут браться только из переменных окружения.
+**`.env` добавлен в `.gitignore` — он никогда не попадёт в репозиторий.**
 
-**Вариант Б — добавить config.py в .gitignore:**
+### 3.3. Собрать и запустить
+
 ```bash
-echo "config.py" >> .gitignore
+docker build -t video-bot .
+docker run -d \
+  --name video-bot \
+  --restart unless-stopped \
+  --env-file .env \
+  -v video-bot-data:/data \
+  video-bot
 ```
-Но тогда на Render нужно будет как-то доставить файл — неудобно.
 
-### 3.3. Создать сервис на Render
-
-1. Зайдите на https://dashboard.render.com
-2. **New** → **Blueprint**
-3. Подключите GitHub → выберите репозиторий
-4. Render увидит `render.yaml` и предложит настройки
-
-**Или вручную:**
-
-1. **New** → **Worker**
-2. На вкладке **Public Git repository** вставьте: `https://github.com/ВАШ_АККАУНТ/telegram_video_bot.git`
-3. Runtime: выберите **Docker**
-4. Branch: `main`
-
-### 3.4. Добавить переменные окружения
-
-В разделе **Environment Variables** добавьте (каждая отдельно):
-
-| Key | Value |
-|-----|-------|
-| `API_ID` | ваш api_id |
-| `API_HASH` | ваш api_hash |
-| `BOT_TOKEN` | ваш bot_token |
-| `VK_LOGIN` | (если нужно) |
-| `VK_PASSWORD` | (если нужно) |
-| `DEEZER_ARL` | (если нужно) |
-| `TEMP_DIR` | `/data/downloads` |
-
-**Как получить Deezer ARL:**
-1. Зайдите на https://deezer.com в Chrome
-2. F12 → **Application** → **Cookies** → `deezer.com` → `arl`
-3. Скопируйте значение
-
-### 3.5. Добавить диск (Disk)
-
-Внизу страницы **Disks** → **Add Disk**:
-- Name: `data`
-- Mount Path: `/data`
-- Size: 1 GB
-
-Это сохранит сессию Pyrogram (`video_bot.session`) между перезапусками.
-
-### 3.6. Deploy
-
-Нажмите **Apply** → **Create Worker**.
-
-Render соберёт образ, запустит бота. Логи можно смотреть в **Logs** вкладке.
+Или через `start.sh` без Docker (нужен Python 3.11 + ffmpeg + deno + tor):
+```bash
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+./start.sh
+```
 
 ---
 
@@ -214,8 +172,6 @@ Render соберёт образ, запустит бота. Логи можно
 ## 6. Ограничения
 
 - Telegram: файлы до 2 ГБ (через MTProto)
-- Render: бесплатный тир 512 MB RAM, спит при неактивности 15 мин (бот встаёт по входящему сообщению)
-- Для продакшна: $7/мес (Starter) — без сна
 
 ---
 

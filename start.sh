@@ -1,6 +1,9 @@
 #!/bin/bash
 set -e
 
+# Add deno to PATH for yt-dlp EJS challenge solver
+export PATH="/root/.deno/bin:$PATH"
+
 # Папка для скачиваний
 mkdir -p downloads
 

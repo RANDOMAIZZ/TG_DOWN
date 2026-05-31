@@ -41,40 +41,36 @@ class YouTubeDownloader(BaseDownloader):
         is_short = '/shorts/' in url.lower()
         print(f'[YT] get_info: {url[:60]}')
 
+        # try impersonation first (uses curl_cffi to look like real browser)
         configs = [
-            # 0: android client, worst format, no webpage
-            {
-                'quiet': True, 'no_warnings': True, 'socket_timeout': 30,
-                'format': 'worst',
-                'extractor_args': {'youtube': {'player_client': ['android'], 'skip': ['webpage', 'configs', 'js']}},
-            },
-            # 1: tv_embedded client
-            {
-                'quiet': True, 'no_warnings': True, 'socket_timeout': 30,
-                'format': 'worst',
-                'extractor_args': {'youtube': {'player_client': ['tv_embedded'], 'skip': ['webpage', 'configs']}},
-            },
-            # 2: web_creator client
-            {
-                'quiet': True, 'no_warnings': True, 'socket_timeout': 30,
-                'format': 'worst',
-                'extractor_args': {'youtube': {'player_client': ['web_creator'], 'skip': ['webpage', 'configs']}},
-            },
-            # 3: all clients, no skip
-            {
-                'quiet': True, 'no_warnings': True, 'socket_timeout': 30,
-                'format': 'worst',
-                'extractor_args': {'youtube': {'player_client': ['android', 'android_creator', 'tv_embedded', 'web_creator']}},
-            },
-            # 4: default yt-dlp with cookies only
-            {
-                'quiet': True, 'no_warnings': True, 'socket_timeout': 30,
-                'format': 'worst',
-            },
-            # 5: default yt-dlp, no format specified (yt-dlp default)
-            {
-                'quiet': True, 'no_warnings': True, 'socket_timeout': 30,
-            },
+            # 0: impersonate chrome + android client
+            {'quiet': True, 'no_warnings': True, 'socket_timeout': 30, 'impersonate': 'chrome',
+             'format': 'worst',
+             'extractor_args': {'youtube': {'player_client': ['android'], 'skip': ['webpage', 'configs', 'js']}}},
+            # 1: impersonate safari + android
+            {'quiet': True, 'no_warnings': True, 'socket_timeout': 30, 'impersonate': 'safari',
+             'format': 'worst',
+             'extractor_args': {'youtube': {'player_client': ['android'], 'skip': ['webpage', 'configs', 'js']}}},
+            # 2: impersonate chrome, no extractor_args
+            {'quiet': True, 'no_warnings': True, 'socket_timeout': 30, 'impersonate': 'chrome',
+             'format': 'worst'},
+            # 3: impersonate safari, no extractor_args
+            {'quiet': True, 'no_warnings': True, 'socket_timeout': 30, 'impersonate': 'safari',
+             'format': 'worst'},
+            # 4: impersonate edge
+            {'quiet': True, 'no_warnings': True, 'socket_timeout': 30, 'impersonate': 'edge',
+             'format': 'worst'},
+            # 5: android client (no impersonation)
+            {'quiet': True, 'no_warnings': True, 'socket_timeout': 30,
+             'format': 'worst',
+             'extractor_args': {'youtube': {'player_client': ['android']}}},
+            # 6: tv_embedded client (no impersonation)
+            {'quiet': True, 'no_warnings': True, 'socket_timeout': 30,
+             'format': 'worst',
+             'extractor_args': {'youtube': {'player_client': ['tv_embedded']}}},
+            # 7: default yt-dlp (last resort)
+            {'quiet': True, 'no_warnings': True, 'socket_timeout': 30,
+             'format': 'worst'},
         ]
 
         cf = self._get_cookiefile()
@@ -84,9 +80,16 @@ class YouTubeDownloader(BaseDownloader):
 
         for i, opts in enumerate(configs):
             try:
+                imp = opts.get('impersonate', 'none')
                 pc = opts.get('extractor_args', {}).get('youtube', {}).get('player_client', ['default'])
-                print(f'[YT] cfg{i}: player={pc}, format={opts.get("format","best")}')
-                info = await self.ytdlp_get_info(url, extra=opts)
+                print(f'[YT] cfg{i}: imp={imp}, pc={pc}')
+                loop = asyncio.get_event_loop()
+
+                def _sync(o):
+                    with yt_dlp.YoutubeDL(o) as ydl:
+                        return ydl.extract_info(url, download=False)
+
+                info = await loop.run_in_executor(None, _sync, opts)
                 if info:
                     title = info.get('title', 'video')
                     duration = info.get('duration', 0)
@@ -115,18 +118,24 @@ class YouTubeDownloader(BaseDownloader):
         print(f'[YT] download: format={format_id}, url={url[:60]}')
 
         configs = [
-            {'quiet': True, 'no_warnings': True, 'socket_timeout': 30,
+            {'quiet': True, 'no_warnings': True, 'socket_timeout': 30, 'impersonate': 'chrome',
              'format': 'worst',
              'extractor_args': {'youtube': {'player_client': ['android'], 'skip': ['webpage', 'configs', 'js']}}},
+            {'quiet': True, 'no_warnings': True, 'socket_timeout': 30, 'impersonate': 'safari',
+             'format': 'worst',
+             'extractor_args': {'youtube': {'player_client': ['android'], 'skip': ['webpage', 'configs', 'js']}}},
+            {'quiet': True, 'no_warnings': True, 'socket_timeout': 30, 'impersonate': 'chrome',
+             'format': 'worst'},
+            {'quiet': True, 'no_warnings': True, 'socket_timeout': 30, 'impersonate': 'safari',
+             'format': 'worst'},
+            {'quiet': True, 'no_warnings': True, 'socket_timeout': 30, 'impersonate': 'edge',
+             'format': 'worst'},
             {'quiet': True, 'no_warnings': True, 'socket_timeout': 30,
              'format': 'worst',
-             'extractor_args': {'youtube': {'player_client': ['tv_embedded'], 'skip': ['webpage', 'configs']}}},
+             'extractor_args': {'youtube': {'player_client': ['android']}}},
             {'quiet': True, 'no_warnings': True, 'socket_timeout': 30,
              'format': 'worst',
-             'extractor_args': {'youtube': {'player_client': ['web_creator'], 'skip': ['webpage', 'configs']}}},
-            {'quiet': True, 'no_warnings': True, 'socket_timeout': 30,
-             'format': 'worst',
-             'extractor_args': {'youtube': {'player_client': ['android', 'android_creator', 'tv_embedded', 'web_creator']}}},
+             'extractor_args': {'youtube': {'player_client': ['tv_embedded']}}},
             {'quiet': True, 'no_warnings': True, 'socket_timeout': 30,
              'format': 'worst'},
         ]
@@ -138,8 +147,27 @@ class YouTubeDownloader(BaseDownloader):
 
         for i, opts in enumerate(configs):
             try:
-                print(f'[YT] dl cfg{i}: player={opts.get("extractor_args",{}).get("youtube",{}).get("player_client",["default"])}')
-                result = await self.ytdlp_download(url, format_id, progress_queue, extra=opts)
+                imp = opts.get('impersonate', 'none')
+                pc = opts.get('extractor_args', {}).get('youtube', {}).get('player_client', ['default'])
+                print(f'[YT] dl cfg{i}: imp={imp}, pc={pc}')
+                outtmpl, tag = self.unique_outtmpl()
+                opts['outtmpl'] = outtmpl
+                if progress_queue:
+                    opts['progress_hooks'] = [self.make_progress_hook(progress_queue)]
+
+                def _sync(o):
+                    with yt_dlp.YoutubeDL(o) as ydl:
+                        info = ydl.extract_info(url, download=True)
+                        if not info:
+                            return None, 'Empty info'
+                        if info.get('_type') == 'playlist' and info.get('entries'):
+                            info = info['entries'][0] or info
+                        title = (info.get('title') or info.get('track') or 'media')[:80]
+                        path = self.resolve_downloaded_file(info, ydl, tag)
+                        return (path, title) if path else (None, 'File not found')
+
+                loop = asyncio.get_event_loop()
+                result = await loop.run_in_executor(None, _sync, opts)
                 if result[0]:
                     print(f'[YT] dl cfg{i} OK')
                     return result

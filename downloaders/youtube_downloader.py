@@ -100,6 +100,7 @@ class YouTubeDownloader(BaseDownloader):
 
     async def download(self, url: str, format_id: str, progress_queue=None) -> tuple:
         print(f"[YT] download: format={format_id}, url={url[:60]}")
-        result = await self.ytdlp_download(url, format_id, progress_queue, cookiefile=self.cookiefile, extra=self._yt_extra())
+        # Всегда используем best — format_id от parse_video_formats ненадёжен
+        result = await self.ytdlp_download(url, 'best', progress_queue, cookiefile=self.cookiefile, extra=self._yt_extra())
         print(f"[YT] download result: path={'OK' if result[0] else 'FAIL'}, title={result[1][:50] if result[1] else 'None'}")
         return result

@@ -28,12 +28,20 @@ for i in 0 1 2 3 4 5 6 7 8 9; do
     echo "[start.sh] Tor not ready yet ($((i+1))*3s)"
 done
 
-# Pre-cache EJS challenge solver for YouTube (yt-dlp is inside venv)
-VENV_YT="$(dirname "$0")/venv/bin/yt-dlp"
-if [ -f "$VENV_YT" ]; then
-    echo "[start.sh] Caching EJS challenge solver..."
-    $VENV_YT --remote-components ejs:github --no-warnings --ignore-errors --dump-json "https://www.youtube.com/watch?v=dQw4w9WgXcQ" 2>/dev/null || true
+# Pre-cache EJS challenge solver for YouTube
+YTDLP=""
+for cand in "$(dirname "$0")/venv/bin/yt-dlp" "$(dirname "$0")/.venv/bin/yt-dlp" "$(command -v yt-dlp 2>/dev/null)"; do
+    if [ -n "$cand" ] && [ -f "$cand" ]; then YTDLP="$cand"; break; fi
+done
+if [ -z "$YTDLP" ] && command -v yt-dlp &>/dev/null; then
+    YTDLP=$(command -v yt-dlp)
+fi
+if [ -n "$YTDLP" ]; then
+    echo "[start.sh] Caching EJS challenge solver ($YTDLP)..."
+    $YTDLP --remote-components ejs:github --no-warnings --ignore-errors --dump-json "https://www.youtube.com/watch?v=dQw4w9WgXcQ" 2>/dev/null || true
     echo "[start.sh] EJS cache done"
+else
+    echo "[start.sh] yt-dlp not found, skipping EJS cache"
 fi
 
 PYTHONUNBUFFERED=1 exec python bot.py

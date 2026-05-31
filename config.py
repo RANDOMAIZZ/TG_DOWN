@@ -44,7 +44,7 @@ INSTAGRAM_COOKIES_FILE = os.getenv('INSTAGRAM_COOKIES_FILE', 'cookies/instagram.
 SOUNDCLOUD_COOKIES_FILE = os.getenv('SOUNDCLOUD_COOKIES_FILE', 'cookies/soundcloud.txt')
 YANDEX_COOKIES_FILE = os.getenv('YANDEX_COOKIES_FILE', 'cookies/yandex.txt')
 SPOTIFY_COOKIES_FILE = os.getenv('SPOTIFY_COOKIES_FILE', 'cookies/spotify.txt')
-YOUTUBE_COOKIES_FILE = os.getenv('YOUTUBE_COOKIES_FILE', 'cookies/youtube.txt')
+YOUTUBE_COOKIES_FILE = os.getenv('YOUTUBE_COOKIES_FILE', 'www.youtube.com_cookies.txt')
 
 # Доступ к боту (оставьте пустым списком для открытого доступа)
 ALLOWED_USERS = [1090508225, 5231935041, 357974771, 6673270481]

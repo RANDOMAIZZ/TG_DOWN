@@ -821,13 +821,10 @@ if __name__ == '__main__':
     _cleanup_temp_dir()
     print("[VideoBot] Bot started! MTProto (2 GB limit)")
 
-    # Health check HTTP для Render (ожидает порт)
+    # Health check для Render Web Service
     class _H(http.server.BaseHTTPRequestHandler):
         def do_GET(self): self.send_response(200); self.end_headers(); self.wfile.write(b'OK')
         def log_message(self, *a): pass
-    def _health():
-        s = http.server.HTTPServer(('0.0.0.0', 10000), _H)
-        s.serve_forever()
-    threading.Thread(target=_health, daemon=True).start()
+    threading.Thread(target=http.server.HTTPServer(('0.0.0.0', 10000), _H).serve_forever, daemon=True).start()
 
     app.run()

@@ -2,7 +2,15 @@
 set -e
 
 # Папка для скачиваний
-mkdir -p downloads
+mkdir -p downloads cookies
+
+# Восстанавливаем куки из переменной окружения (base64)
+if [ -n "$YOUTUBE_COOKIES" ]; then
+    echo "$YOUTUBE_COOKIES" | base64 -d > cookies/youtube.txt 2>/dev/null && echo "[OK] YouTube cookies restored from env"
+fi
+if [ -n "$VK_COOKIES" ]; then
+    echo "$VK_COOKIES" | base64 -d > vk.com_cookies.txt 2>/dev/null && echo "[OK] VK cookies restored from env"
+fi
 
 # Persistent disk at /data — пробрасываем сессию и куки
 if [ -d /data ]; then

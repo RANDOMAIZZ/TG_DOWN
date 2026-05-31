@@ -1,6 +1,13 @@
 from .base import BaseDownloader
 from typing import Dict
 import os
+import asyncio
+import yt_dlp
+
+QUALITY_MAP = {
+    '144p': 144, '240p': 240, '360p': 360, '480p': 480,
+    '720p': 720, '1080p': 1080, '1440p': 1440, '2160p': 2160,
+}
 
 
 class YouTubeDownloader(BaseDownloader):
@@ -75,12 +82,56 @@ class YouTubeDownloader(BaseDownloader):
     async def download(self, url: str, format_id: str, progress_queue=None) -> tuple:
         print(f"[YT] download: format={format_id}, url={url[:60]}")
 
-        # При неудаче с конкретным format_id пробуем best
         extra = self._yt_extra()
-        result = await self.ytdlp_download(url, format_id, progress_queue, cookiefile=self.cookiefile, extra=extra)
-        if result[0] is None:
-            print(f"[YT] download: format_id не сработал, пробую best")
-            result = await self.ytdlp_download(url, 'best', progress_queue, cookiefile=self.cookiefile, extra=extra)
+        loop = asyncio.get_event_loop()
+
+        # Мапим запрошенное качество в форматную строку yt-dlp
+        if format_id == 'best':
+            fmt_str = 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/bestvideo+bestaudio/best[ext=mp4]/best'
+        elif format_id in QUALITY_MAP:
+            h = QUALITY_MAP[format_id]
+            fmt_str = f'bestvideo[height<={h}]+bestaudio/best[ext=mp4]/best'
+        else:
+            fmt_str = 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/bestvideo+bestaudio/best[ext=mp4]/best'
+
+        print(f"[YT] download: fmt_str={fmt_str}")
+
+        def _sync(fmt):
+            outtmpl, tag = self.unique_outtmpl()
+            opts = {
+                'quiet': True, 'no_warnings': True,
+                'outtmpl': outtmpl,
+                'format': fmt,
+                'merge_output_format': 'mp4',
+                'http_headers': {'User-Agent': self.user_agent},
+                'retries': 3, 'fragment_retries': 3, 'socket_timeout': 30,
+            }
+            cf = self.resolve_cookiefile(self.cookiefile)
+            if cf:
+                opts['cookiefile'] = cf
+            if extra:
+                opts.update(extra)
+            if progress_queue:
+                opts['progress_hooks'] = [self.make_progress_hook(progress_queue)]
+
+            with yt_dlp.YoutubeDL(opts) as ydl:
+                info = ydl.extract_info(url, download=True)
+                if not info:
+                    return None, 'Не удалось скачать'
+                if info.get('_type') == 'playlist' and info.get('entries'):
+                    info = info['entries'][0] or info
+                title = (info.get('title') or info.get('track') or 'media')[:80]
+                path = self.resolve_downloaded_file(info, ydl, tag)
+                if path:
+                    return path, title
+                return None, 'Файл не найден после загрузки'
+
+        result = await loop.run_in_executor(None, lambda: _sync(fmt_str))
+
+        # Если не сработало — пробуем best
+        if result[0] is None and fmt_str != 'best[ext=mp4]/best':
+            print(f"[YT] download: fallback to best")
+            result = await loop.run_in_executor(None, lambda: _sync('best[ext=mp4]/best'))
 
         print(f"[YT] download result: path={'OK' if result[0] else 'FAIL'}, title={result[1][:50] if result[1] else 'None'}")
         return result

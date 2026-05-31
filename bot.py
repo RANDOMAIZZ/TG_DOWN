@@ -33,6 +33,7 @@ from downloaders import (
     XVideosDownloader, VKDownloader, PinterestDownloader,
     RutubeDownloader, OdklDownloader, InstagramDownloader, DeezerDownloader,
     TwitchDownloader, TwitterDownloader, YandexDiskDownloader, GoogleDriveDownloader,
+    PatreonDownloader,
     VKMusicDownloader, SoundCloudDownloader, YandexMusicDownloader,
     SpotifyDownloader, BaseDownloader, resolve_path,
 )
@@ -94,6 +95,8 @@ def detect_platform(url: str) -> str:
     if 'twitch.tv' in u:
         return 'twitch'
     if ('twitter.com' in u or 'x.com' in u) and '/status/' in u:
+        if 'patreon.com' in u:
+            return 'patreon'
         return 'twitter'
     if 'yadi.sk' in u or 'disk.yandex' in u:
         return 'yandex_disk'
@@ -175,6 +178,8 @@ def get_downloader(url: str):
     if platform == 'twitch':
         return TwitchDownloader(TEMP_DIR)
     if platform == 'twitter':
+        if platform == "patreon":
+            return PatreonDownloader(TEMP_DIR, cookiefile=resolve_path("patreon_cookies.txt"))
         return TwitterDownloader(TEMP_DIR)
     if platform == 'yandex_disk':
         return YandexDiskDownloader(TEMP_DIR)
@@ -204,8 +209,8 @@ def extract_vk_token_from_url(text: str) -> str:
 @app.on_message(filters.command("start"))
 async def start_cmd(client, msg):
     await msg.reply_text(
-        f"{EMOJIS['success']} *VideoBot вЂ” С‚РІРѕР№ Р»РёС‡РЅС‹Р№ РјРµРґРёР°-РєРёР»Р»РµСЂ!*\n\n"
-        "РљРёРґР°Р№ СЃСЃС‹Р»РєСѓ вЂ” СЏ СЃР°Рј СЂР°Р·Р±РµСЂСѓСЃСЊ, С‡С‚Рѕ СЃ РЅРµР№ РґРµР»Р°С‚СЊ.\n"
+        f"{EMOJIS['success']} *VideoBot \u2014 \u0442\u0432\u043e\u0439 \u043b\u0438\u0447\u043d\u044b\u0439 \u043c\u0435\u0434\u0438\u0430-\u043a\u0438\u043b\u043b\u0435\u0440!*\n\n"
+        "\u041a\u0438\u0434\u0430\u0439 \u0441\u0441\u044b\u043b\u043a\u0443 \u2014 \u044f \u0441\u0430\u043c \u0440\u0430\u0437\u0431\u0435\u0440\u0443\u0441\u044c, \u0447\u0442\u043e \u0441 \u043d\u0435\u0439 \u0434\u0435\u043b\u0430\u0442\u044c.\n"
         "\n"
         "`YouTube (+Shorts)  \u2192 \u0432\u0438\u0434\u0435\u043e/\u0430\u0443\u0434\u0438\u043e`\n"
         "`TikTok (+\u0444\u043e\u0442\u043e)    \u2192 \u0432\u0438\u0434\u0435\u043e`\n"
@@ -213,8 +218,9 @@ async def start_cmd(client, msg):
         "`Twitter / X         \u2192 \u0432\u0438\u0434\u0435\u043e`\n"
         "`VK                  \u2192 \u0432\u0438\u0434\u0435\u043e`\n"
         "`VK Music            \u2192 \u0430\u0443\u0434\u0438\u043e`\n"
-        "`OK (\u041e\u0434\u043d\u043e\u043a\u043b\u0430\u0441\u0441\u043d\u0438\u043a\u0438) \u2192 \u0432\u0438\u0434\u0435\u043e`\n"
-        "`Instagram           \u2192 \u0432\u0438\u0434\u0435\u043e/\u0444\u043e\u0442\u043e`\n"
+         "`OK (\u041e\u0434\u043d\u043e\u043a\u043b\u0430\u0441\u0441\u043d\u0438\u043a\u0438) \u2192 \u0432\u0438\u0434\u0435\u043e`\n"
+         "`Patreon              \u2192 \u0432\u0438\u0434\u0435\u043e/\u0444\u0430\u0439\u043b\u044b`\n"
+         "`Instagram           \u2192 \u0432\u0438\u0434\u0435\u043e/\u0444\u043e\u0442\u043e`\n"
         "`Rutube              \u2192 \u0432\u0438\u0434\u0435\u043e`\n"
         "`SoundCloud          \u2192 \u0430\u0443\u0434\u0438\u043e`\n"
         "`Yandex Music        \u2192 \u0430\u0443\u0434\u0438\u043e`\n"
@@ -228,12 +234,11 @@ async def start_cmd(client, msg):
         "`Telegram \u043a\u0440\u0443\u0436\u043e\u0447\u043a\u0438 \u2192 \u043e\u0431\u044b\u0447\u043d\u043e\u0435 \u0432\u0438\u0434\u0435\u043e`\n"
         "`Telegram \u0433\u043e\u043b\u043e\u0441\u043e\u0432\u044b\u0435 \u2192 MP3`\n"
         "\n"
-        "\U0001f511 VK: РїСЂРёС€Р»Рё СЃСЃС‹Р»РєСѓ СЃ access_token РёР»Рё `/login vk_token <С‚РѕРєРµРЅ>`\n"
-        "\U0001f36a Instagram/TikTok: РїРѕР»РѕР¶Рё cookies РІ РїР°РїРєСѓ `cookies/`\n"
-        "\U0001f680 РџРѕРіРЅР°Р»Рё!",
+        "\U0001f511 VK: \u043f\u0440\u0438\u0448\u043b\u0438 \u0441\u0441\u044b\u043b\u043a\u0443 \u0441 access_token \u0438\u043b\u0438 `/login vk_token <\u0442\u043e\u043a\u0435\u043d>`\n"
+        "\U0001f36a Instagram/TikTok: \u043f\u043e\u043b\u043e\u0436\u0438 cookies \u0432 \u043f\u0430\u043f\u043a\u0443 `cookies/`\n"
+        "\U0001f680 \u041f\u043e\u0433\u043d\u0430\u043b\u0438!",
         parse_mode=enums.ParseMode.MARKDOWN,
     )
-
 
 @app.on_message(filters.command("help"))
 async def help_cmd(client, msg):

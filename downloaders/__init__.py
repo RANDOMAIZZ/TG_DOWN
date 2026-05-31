@@ -9,6 +9,7 @@ from .twitch_downloader import TwitchDownloader
 from .twitter_downloader import TwitterDownloader
 from .yandex_disk_downloader import YandexDiskDownloader
 from .gdrive_downloader import GoogleDriveDownloader
+from .patreon_downloader import PatreonDownloader
 from .odkl_downloader import OdklDownloader
 from .instagram_downloader import InstagramDownloader
 from .deezer_downloader import DeezerDownloader

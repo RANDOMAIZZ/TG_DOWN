@@ -57,32 +57,23 @@ class YouTubeDownloader(BaseDownloader):
 
         # try impersonation first (uses curl_cffi to look like real browser)
         configs = [
-            # 0: impersonate chrome + android client
-            {'quiet': True, 'no_warnings': True, 'socket_timeout': 30, 'impersonate': 'chrome',
-             'format': 'worst',
-             'extractor_args': {'youtube': {'player_client': ['android'], 'skip': ['webpage', 'configs', 'js']}}},
-            # 1: impersonate safari + android
-            {'quiet': True, 'no_warnings': True, 'socket_timeout': 30, 'impersonate': 'safari',
-             'format': 'worst',
-             'extractor_args': {'youtube': {'player_client': ['android'], 'skip': ['webpage', 'configs', 'js']}}},
-            # 2: impersonate chrome, no extractor_args
-            {'quiet': True, 'no_warnings': True, 'socket_timeout': 30, 'impersonate': 'chrome',
-             'format': 'worst'},
-            # 3: impersonate safari, no extractor_args
-            {'quiet': True, 'no_warnings': True, 'socket_timeout': 30, 'impersonate': 'safari',
-             'format': 'worst'},
-            # 4: impersonate edge
-            {'quiet': True, 'no_warnings': True, 'socket_timeout': 30, 'impersonate': 'edge',
-             'format': 'worst'},
-            # 5: android client (no impersonation)
+            # 0: android client
             {'quiet': True, 'no_warnings': True, 'socket_timeout': 30,
              'format': 'worst',
              'extractor_args': {'youtube': {'player_client': ['android']}}},
-            # 6: tv_embedded client (no impersonation)
+            # 1: tv_embedded client
             {'quiet': True, 'no_warnings': True, 'socket_timeout': 30,
              'format': 'worst',
              'extractor_args': {'youtube': {'player_client': ['tv_embedded']}}},
-            # 7: default yt-dlp (last resort)
+            # 2: web_creator client
+            {'quiet': True, 'no_warnings': True, 'socket_timeout': 30,
+             'format': 'worst',
+             'extractor_args': {'youtube': {'player_client': ['web_creator']}}},
+            # 3: all mobile clients
+            {'quiet': True, 'no_warnings': True, 'socket_timeout': 30,
+             'format': 'worst',
+             'extractor_args': {'youtube': {'player_client': ['android', 'android_creator', 'tv_embedded', 'web_creator']}}},
+            # 4: default yt-dlp
             {'quiet': True, 'no_warnings': True, 'socket_timeout': 30,
              'format': 'worst'},
         ]
@@ -90,9 +81,9 @@ class YouTubeDownloader(BaseDownloader):
         # Add Tor proxy configs if Tor is running
         if _tor_available():
             print('[YT] Tor available, adding proxy configs')
-            for pi, pc in enumerate(['chrome', 'safari', 'edge']):
-                configs.append({'quiet': True, 'no_warnings': True, 'socket_timeout': 60,
-                                'proxy': TOR_PROXY, 'impersonate': pc, 'format': 'worst'})
+            configs.append({'quiet': True, 'no_warnings': True, 'socket_timeout': 60,
+                            'proxy': TOR_PROXY, 'format': 'worst',
+                            'extractor_args': {'youtube': {'player_client': ['android']}}})
             configs.append({'quiet': True, 'no_warnings': True, 'socket_timeout': 60,
                             'proxy': TOR_PROXY, 'format': 'worst'})
         else:
@@ -102,9 +93,6 @@ class YouTubeDownloader(BaseDownloader):
         if cf:
             for c in configs:
                 c['cookiefile'] = cf
-
-        for c in configs:
-            c['remote_components'] = 'ejs:github'
 
         for i, opts in enumerate(configs):
             try:
@@ -146,18 +134,6 @@ class YouTubeDownloader(BaseDownloader):
         print(f'[YT] download: format={format_id}, url={url[:60]}')
 
         configs = [
-            {'quiet': True, 'no_warnings': True, 'socket_timeout': 30, 'impersonate': 'chrome',
-             'format': 'worst',
-             'extractor_args': {'youtube': {'player_client': ['android'], 'skip': ['webpage', 'configs', 'js']}}},
-            {'quiet': True, 'no_warnings': True, 'socket_timeout': 30, 'impersonate': 'safari',
-             'format': 'worst',
-             'extractor_args': {'youtube': {'player_client': ['android'], 'skip': ['webpage', 'configs', 'js']}}},
-            {'quiet': True, 'no_warnings': True, 'socket_timeout': 30, 'impersonate': 'chrome',
-             'format': 'worst'},
-            {'quiet': True, 'no_warnings': True, 'socket_timeout': 30, 'impersonate': 'safari',
-             'format': 'worst'},
-            {'quiet': True, 'no_warnings': True, 'socket_timeout': 30, 'impersonate': 'edge',
-             'format': 'worst'},
             {'quiet': True, 'no_warnings': True, 'socket_timeout': 30,
              'format': 'worst',
              'extractor_args': {'youtube': {'player_client': ['android']}}},
@@ -165,13 +141,19 @@ class YouTubeDownloader(BaseDownloader):
              'format': 'worst',
              'extractor_args': {'youtube': {'player_client': ['tv_embedded']}}},
             {'quiet': True, 'no_warnings': True, 'socket_timeout': 30,
+             'format': 'worst',
+             'extractor_args': {'youtube': {'player_client': ['web_creator']}}},
+            {'quiet': True, 'no_warnings': True, 'socket_timeout': 30,
+             'format': 'worst',
+             'extractor_args': {'youtube': {'player_client': ['android', 'android_creator', 'tv_embedded', 'web_creator']}}},
+            {'quiet': True, 'no_warnings': True, 'socket_timeout': 30,
              'format': 'worst'},
         ]
 
         if _tor_available():
-            for pi, pc in enumerate(['chrome', 'safari', 'edge']):
-                configs.append({'quiet': True, 'no_warnings': True, 'socket_timeout': 60,
-                                'proxy': TOR_PROXY, 'impersonate': pc, 'format': 'worst'})
+            configs.append({'quiet': True, 'no_warnings': True, 'socket_timeout': 60,
+                            'proxy': TOR_PROXY, 'format': 'worst',
+                            'extractor_args': {'youtube': {'player_client': ['android']}}})
             configs.append({'quiet': True, 'no_warnings': True, 'socket_timeout': 60,
                             'proxy': TOR_PROXY, 'format': 'worst'})
 
@@ -179,9 +161,6 @@ class YouTubeDownloader(BaseDownloader):
         if cf:
             for c in configs:
                 c['cookiefile'] = cf
-
-        for c in configs:
-            c['remote_components'] = 'ejs:github'
 
         for i, opts in enumerate(configs):
             try:

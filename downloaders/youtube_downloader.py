@@ -28,14 +28,15 @@ class YouTubeDownloader(BaseDownloader):
                 print(f"[YT] Failed to load cookies from env: {e}")
 
     def _yt_extra(self) -> dict:
-        # Если куки загружены — ничего не делаем, yt-dlp использует default web client
+        extra = {'remote_components': 'ejs:github'}
         if self._loaded_cookies:
-            return {}
+            return extra
         if self.cookiefile and self.resolve_cookiefile(self.cookiefile):
-            return {}
+            return extra
         if self.cookies_browser:
             print(f"[YT] cookies file not found, trying --cookies-from-browser {self.cookies_browser}")
-            return {'cookiesfrombrowser': (self.cookies_browser, None, None, None)}
+            extra['cookiesfrombrowser'] = (self.cookies_browser, None, None, None)
+            return extra
         # Firefox на локальном ПК
         prof = os.path.expanduser('~\\AppData\\Roaming\\Mozilla\\Firefox\\Profiles')
         if os.path.isdir(prof):
@@ -47,11 +48,13 @@ class YouTubeDownloader(BaseDownloader):
                             with open(p, 'rb') as _f:
                                 _f.read(1)
                             print('[YT] cookies file not found, using Firefox cookies')
-                            return {'cookiesfrombrowser': ('firefox', None, None, None)}
+                            extra['cookiesfrombrowser'] = ('firefox', None, None, None)
+                            return extra
                         except Exception:
                             continue
         print('[YT] куки не найдены, использую Android client (без авторизации)')
-        return {'extractor_args': {'youtube': {'player_client': ['android']}}}
+        extra['extractor_args'] = {'youtube': {'player_client': ['android']}}
+        return extra
 
     def detect_url(self, url: str) -> bool:
         u = url.lower()

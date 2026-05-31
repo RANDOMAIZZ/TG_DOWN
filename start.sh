@@ -14,4 +14,8 @@ if [ -d /data ]; then
     mkdir -p /data/downloads
 fi
 
+# Start Tor for YouTube IP bypass
+tor --RunAsDaemon 1 2>/dev/null || true
+sleep 3
+
 PYTHONUNBUFFERED=1 exec python bot.py

@@ -4,6 +4,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg \
     curl \
     unzip \
+    tor \
     && curl -fsSL https://deno.land/install.sh | sh \
     && echo 'export DENO_INSTALL="/root/.deno"' >> /root/.bashrc \
     && echo 'export PATH="$DENO_INSTALL/bin:$PATH"' >> /root/.bashrc \

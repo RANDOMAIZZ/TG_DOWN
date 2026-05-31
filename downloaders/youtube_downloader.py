@@ -4,6 +4,20 @@ import os
 import base64
 import yt_dlp
 import asyncio
+import socket
+
+
+def _tor_available() -> bool:
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.settimeout(1)
+        s.connect(('127.0.0.1', 9050))
+        s.close()
+        return True
+    except:
+        return False
+
+TOR_PROXY = 'socks5h://127.0.0.1:9050'
 
 
 YT_COOKIES_PATH = '/tmp/yt_cookies.txt'
@@ -73,6 +87,17 @@ class YouTubeDownloader(BaseDownloader):
              'format': 'worst'},
         ]
 
+        # Add Tor proxy configs if Tor is running
+        if _tor_available():
+            print('[YT] Tor available, adding proxy configs')
+            for pi, pc in enumerate(['chrome', 'safari', 'edge']):
+                configs.append({'quiet': True, 'no_warnings': True, 'socket_timeout': 60,
+                                'proxy': TOR_PROXY, 'impersonate': pc, 'format': 'worst'})
+            configs.append({'quiet': True, 'no_warnings': True, 'socket_timeout': 60,
+                            'proxy': TOR_PROXY, 'format': 'worst'})
+        else:
+            print('[YT] Tor not available')
+
         cf = self._get_cookiefile()
         if cf:
             for c in configs:
@@ -139,6 +164,13 @@ class YouTubeDownloader(BaseDownloader):
             {'quiet': True, 'no_warnings': True, 'socket_timeout': 30,
              'format': 'worst'},
         ]
+
+        if _tor_available():
+            for pi, pc in enumerate(['chrome', 'safari', 'edge']):
+                configs.append({'quiet': True, 'no_warnings': True, 'socket_timeout': 60,
+                                'proxy': TOR_PROXY, 'impersonate': pc, 'format': 'worst'})
+            configs.append({'quiet': True, 'no_warnings': True, 'socket_timeout': 60,
+                            'proxy': TOR_PROXY, 'format': 'worst'})
 
         cf = self._get_cookiefile()
         if cf:

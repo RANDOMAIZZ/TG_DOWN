@@ -5,6 +5,10 @@ from .xvideos_downloader import XVideosDownloader
 from .vk_downloader import VKDownloader
 from .pinterest_downloader import PinterestDownloader
 from .rutube_downloader import RutubeDownloader
+from .twitch_downloader import TwitchDownloader
+from .twitter_downloader import TwitterDownloader
+from .yandex_disk_downloader import YandexDiskDownloader
+from .gdrive_downloader import GoogleDriveDownloader
 from .odkl_downloader import OdklDownloader
 from .instagram_downloader import InstagramDownloader
 from .deezer_downloader import DeezerDownloader
@@ -20,6 +24,10 @@ __all__ = [
     'VKDownloader',
     'PinterestDownloader',
     'RutubeDownloader',
+    'TwitchDownloader',
+    'TwitterDownloader',
+    'YandexDiskDownloader',
+    'GoogleDriveDownloader',
     'OdklDownloader',
     'InstagramDownloader',
     'DeezerDownloader',

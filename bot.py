@@ -1,4 +1,4 @@
-"""Telegram Video Bot — универсальный загрузчик видео/аудио."""
+"""Telegram Video Bot ??? ?????????????????????????? ?????????????????? ??????????/??????????."""
 import os
 import re
 import sys
@@ -32,6 +32,7 @@ from downloaders import (
     YouTubeDownloader, TikTokDownloader, PornhubDownloader,
     XVideosDownloader, VKDownloader, PinterestDownloader,
     RutubeDownloader, OdklDownloader, InstagramDownloader, DeezerDownloader,
+    TwitchDownloader, TwitterDownloader, YandexDiskDownloader, GoogleDriveDownloader,
     VKMusicDownloader, SoundCloudDownloader, YandexMusicDownloader,
     SpotifyDownloader, BaseDownloader, resolve_path,
 )
@@ -47,7 +48,7 @@ VK_AUTH_FILE = 'vk_auth.json'
 app = Client("video_bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
 
 
-# ── Helpers ──
+# ?????? Helpers ??????
 
 def _url_lower(url: str) -> str:
     return url.strip().lower().split('?')[0].split('#')[0]
@@ -90,6 +91,14 @@ def detect_platform(url: str) -> str:
         return 'odkl'
     if 'instagram.com' in u or 'instagr.am' in u:
         return 'instagram'
+    if 'twitch.tv' in u:
+        return 'twitch'
+    if ('twitter.com' in u or 'x.com' in u) and '/status/' in u:
+        return 'twitter'
+    if 'yadi.sk' in u or 'disk.yandex' in u:
+        return 'yandex_disk'
+    if 'drive.google.com' in u or 'docs.google.com' in u:
+        return 'gdrive'
     return 'unknown'
 
 
@@ -100,10 +109,10 @@ def is_vk_video(url: str) -> bool:
 
 def make_progress_bar(pct: float, width: int = 16) -> str:
     filled = int(pct / 100 * width)
-    return '█' * filled + '░' * (width - filled)
+    return '???' * filled + '???' * (width - filled)
 
 
-# ── VK Auth ──
+# ?????? VK Auth ??????
 
 def load_vk_auth() -> dict:
     try:
@@ -131,7 +140,7 @@ def get_vk_token() -> str:
     return VK_PASSWORD if VK_PASSWORD and VK_LOGIN else ''
 
 
-# ── Platform → Downloader ──
+# ?????? Platform ??? Downloader ??????
 
 def get_downloader(url: str):
     platform = detect_platform(url)
@@ -163,10 +172,18 @@ def get_downloader(url: str):
         return RutubeDownloader(TEMP_DIR)
     if platform == 'odkl':
         return OdklDownloader(TEMP_DIR)
+    if platform == 'twitch':
+        return TwitchDownloader(TEMP_DIR)
+    if platform == 'twitter':
+        return TwitterDownloader(TEMP_DIR)
+    if platform == 'yandex_disk':
+        return YandexDiskDownloader(TEMP_DIR)
+    if platform == 'gdrive':
+        return GoogleDriveDownloader(TEMP_DIR)
     return None
 
 
-# ── VK token extraction ──
+# ?????? VK token extraction ??????
 
 VK_TOKEN_URL_RE = re.compile(
     r'(?:access_token=)(vk1\.[a-zA-Z0-9._\-]+)',
@@ -175,23 +192,23 @@ VK_TOKEN_URL_RE = re.compile(
 
 
 def extract_vk_token_from_url(text: str) -> str:
-    """Извлекает токен VK из URL вида https://api.vk.com/blank.html#access_token=vk1.a..."""
+    """?????????????????? ?????????? VK ???? URL ???????? https://api.vk.com/blank.html#access_token=vk1.a..."""
     m = VK_TOKEN_URL_RE.search(text)
     if m:
         return m.group(1)
     return ''
 
 
-# ── Commands ──
+# ?????? Commands ??????
 
 @app.on_message(filters.command("start"))
 async def start_cmd(client, msg):
     await msg.reply_text(
-        f"{EMOJIS['success']} *Video Bot запущен!*\n\n"
-        "Отправьте ссылку.\n"
-        "\U0001f511 VK: пришлите URL с токеном из браузера после авторизации\n"
+        f"{EMOJIS['success']} *Video Bot ??????????????!*\n\n"
+        "?????????????????? ????????????.\n"
+        "\U0001f511 VK: ???????????????? URL ?? ?????????????? ???? ???????????????? ?????????? ??????????????????????\n"
         "\u0418\u043b\u0438 `/login vk_token <\u0442\u043e\u043a\u0435\u043d>`\n"
-        "Для Яндекс/Instagram нужны cookies — см. папку `cookies/`",
+        "?????? ????????????/Instagram ?????????? cookies ??? ????. ?????????? `cookies/`",
         parse_mode=enums.ParseMode.MARKDOWN,
     )
 
@@ -199,22 +216,22 @@ async def start_cmd(client, msg):
 @app.on_message(filters.command("help"))
 async def help_cmd(client, msg):
     await msg.reply_text(
-        f"{EMOJIS['info']} *Команды:*\n\n"
-        "/start — запуск\n"
-        "/help — справка\n"
-        f"/login vk_token <\u0442\u043e\u043a\u0435\u043d> — VK токен\n"
-        "/logout vk — удалить VK токен\n\n"
-        "*Поддерживаемые платформы:*\n"
+        f"{EMOJIS['info']} *??????????????:*\n\n"
+        "/start ??? ????????????\n"
+        "/help ??? ??????????????\n"
+        f"/login vk_token <\u0442\u043e\u043a\u0435\u043d> ??? VK ??????????\n"
+        "/logout vk ??? ?????????????? VK ??????????\n\n"
+        "*???????????????????????????? ??????????????????:*\n"
         "\U0001f3ac YouTube, YouTube Shorts\n"
         "\U0001f4f1 TikTok\n"
         "VK (\u0432\u0438\u0434\u0435\u043e \u0438 \u043c\u0443\u0437\u044b\u043a\u0430)\n"
-        "\U0001f3b5 SoundCloud, Deezer, Spotify, Яндекс.Музыка\n"
+        "\U0001f3b5 SoundCloud, Deezer, Spotify, ????????????.????????????\n"
         "\U0001f4f7 Instagram, Pinterest\n"
         "\U0001f4fa Pornhub, XVideos, Rutube\n\n"
         "*VK:*\n"
-        "\U0001f511 `/login vk_token <\u0442\u043e\u043a\u0435\u043d>` — авторизация\n"
+        "\U0001f511 `/login vk_token <\u0442\u043e\u043a\u0435\u043d>` ??? ??????????????????????\n"
         "\u0414\u043e\u043c\u0435\u043d vkvideo.ru \u0442\u043e\u0436\u0435 \u043f\u043e\u0434\u0434\u0435\u0440\u0436\u0438\u0432\u0430\u0435\u0442\u0441\u044f\n\n"
-        "Лимит: 2 GB (MTProto).",
+        "??????????: 2 GB (MTProto).",
         parse_mode=enums.ParseMode.MARKDOWN,
     )
 
@@ -224,7 +241,7 @@ async def login_cmd(client, msg):
     parts = msg.text.split(maxsplit=2)
     if len(parts) < 2 or parts[1].lower() not in ('vk', 'vk_token', 'vktoken'):
         await msg.reply_text(
-            f"{EMOJIS['error']} *Использование:*\n\n"
+            f"{EMOJIS['error']} *??????????????????????????:*\n\n"
             "`/login vk_token <\u0442\u043e\u043a\u0435\u043d>`\n"
             "\u0418\u043b\u0438 \u043f\u0440\u043e\u0441\u0442\u043e \u043f\u0440\u0438\u0448\u043b\u0438\u0442\u0435 URL \u0441 \u0442\u043e\u043a\u0435\u043d\u043e\u043c\n"
             "\u0438\u0437 \u0430\u0434\u0440\u0435\u0441\u043d\u043e\u0439 \u0441\u0442\u0440\u043e\u043a\u0438 \u043f\u043e\u0441\u043b\u0435 \u0430\u0432\u0442\u043e\u0440\u0438\u0437\u0430\u0446\u0438\u0438.\n\n"
@@ -266,10 +283,10 @@ async def logout_cmd(client, msg):
             )
 
 
-# ── Message Handler (URL processing) ──
+# ?????? Message Handler (URL processing) ??????
 
 def build_quality_keyboard(formats: list) -> InlineKeyboardMarkup:
-    """Формирует клавиатуру выбора качества из реально доступных форматов."""
+    """?????????????????? ???????????????????? ???????????? ???????????????? ???? ?????????????? ?????????????????? ????????????????."""
     rows = []
     row = []
     for i, fmt in enumerate(formats):
@@ -285,7 +302,7 @@ def build_quality_keyboard(formats: list) -> InlineKeyboardMarkup:
 
 
 async def _download_audio_ytdlp(url: str, progress_queue, cookiefile: str = '') -> tuple:
-    """Скачать только аудио через yt-dlp (для audio_only формата)."""
+    """?????????????? ???????????? ?????????? ?????????? yt-dlp (?????? audio_only ??????????????)."""
     import yt_dlp
     from downloaders.base import resolve_path
     tag = uuid.uuid4().hex[:8]
@@ -362,11 +379,24 @@ async def _start_download_with_progress(
     waiting_start = 0
     d_service = ''
 
-    # Немедленное обновление — убираем info/выбор качества, показываем старт
-    try:
-        await status_msg.edit_text(f"\u2b07\ufe0f *\u0417\u0430\u0433\u0440\u0443\u0437\u043a\u0430...*")
-    except Exception:
-        pass
+    # ???????????????? ???????????????? ?????????????????? ???????????? ???? ???????????????????? ??????????????
+    expected_total = 0
+    if fmt_id != 'audio_only':
+        fmt = next((f for f in info.get('formats', []) if f['format_id'] == fmt_id), None)
+        if fmt:
+            expected_total = fmt.get('filesize', 0) or fmt.get('filesize_approx', 0) or 0
+
+    if expected_total > 0:
+        t_mb = expected_total / 1024 / 1024
+        await status_msg.edit_text(
+            f"\U0001f4e5 *Download*\n"
+            f"`{'???' * 16}` 0% (0.0 MB / {t_mb:.1f} MB)"
+        )
+    else:
+        try:
+            await status_msg.edit_text(f"\u2b07\ufe0f *\u0417\u0430\u0433\u0440\u0443\u0437\u043a\u0430...*")
+        except Exception:
+            pass
 
     while True:
         d_stage, d_current, d_total, d_frag, d_frags, d_speed = 'download', 0, 0, 0, 0, ''
@@ -424,11 +454,21 @@ async def _start_download_with_progress(
             if waiting_start == 0:
                 waiting_start = now
             elapsed = int(now - waiting_start)
-            dots = '.' * (elapsed % 4)
-            try:
-                await status_msg.edit_text(f"\u23f3 \u0417\u0430\u0433\u0440\u0443\u0437\u043a\u0430 \u043c\u043e\u0436\u0435\u0442 \u0437\u0430\u043d\u044f\u0442\u044c \u043d\u0435\u043a\u043e\u0442\u043e\u0440\u043e\u0435 \u0432\u0440\u0435\u043c\u044f{dots}")
-            except Exception:
-                pass
+            if expected_total > 0:
+                t_mb = expected_total / 1024 / 1024
+                try:
+                    await status_msg.edit_text(
+                        f"\U0001f4e5 *Download*\n"
+                        f"`{'???' * 16}` 0% (0.0 MB / {t_mb:.1f} MB)"
+                    )
+                except Exception:
+                    pass
+            else:
+                dots = '.' * (elapsed % 4)
+                try:
+                    await status_msg.edit_text(f"\u23f3 \u0417\u0430\u0433\u0440\u0443\u0437\u043a\u0430 \u043c\u043e\u0436\u0435\u0442 \u0437\u0430\u043d\u044f\u0442\u044c \u043d\u0435\u043a\u043e\u0442\u043e\u0440\u043e\u0435 \u0432\u0440\u0435\u043c\u044f{dots}")
+                except Exception:
+                    pass
             last_update = now
 
         if dl_task.done():
@@ -449,7 +489,7 @@ async def _start_download_with_progress(
         await status_msg.edit_text(f"{EMOJIS['error']} {filename}")
         return
 
-    # Переименовываем аудио в название видео
+    # ?????????????????????????????? ?????????? ?? ???????????????? ??????????
     if filename and filepath.lower().endswith(('.flac', '.mp3', '.m4a', '.opus')):
         title_safe = sanitize_filename(filename)
         ext = os.path.splitext(filepath)[1]
@@ -464,7 +504,7 @@ async def _start_download_with_progress(
     title_display = filename or info.get('title', '')
     caption = f"{EMOJIS['success']} *{title_display}*"
 
-    # Парсим артиста/название один раз, используем и для текста, и для кнопки
+    # ???????????? ??????????????/???????????????? ???????? ??????, ???????????????????? ?? ?????? ????????????, ?? ?????? ????????????
     artist_lr, song_lr = BaseDownloader.parse_artist_title(info, filename)
     if not lyrics and song_lr:
         try:
@@ -498,7 +538,7 @@ async def _start_download_with_progress(
     is_zip = filepath.lower().endswith('.zip')
     is_image = filepath.lower().endswith(('.jpg', '.jpeg', '.png', '.webp'))
 
-    # Встраиваем текст в сам файл
+    # ???????????????????? ?????????? ?? ?????? ????????
     if lyrics:
         try:
             from mutagen import File as MFile
@@ -518,7 +558,7 @@ async def _start_download_with_progress(
         except Exception as e:
             print(f'[Meta] embed lyrics error: {e}')
 
-    # Кнопки для показа/скрытия текста
+    # ???????????? ?????? ????????????/?????????????? ????????????
     user_data[msg.from_user.id] = {
         'lyrics_artist': artist_lr,
         'lyrics_title': song_lr,
@@ -551,6 +591,13 @@ async def _start_download_with_progress(
                 progress=upload_progress,
                 reply_markup=show_hide_kb,
             )
+        elif info.get('platform') in ('gdrive_file', 'yandex_disk_file'):
+            sent = await msg.reply_document(
+                document=filepath, caption=caption,
+                parse_mode=enums.ParseMode.MARKDOWN,
+                progress=upload_progress,
+                reply_markup=show_hide_kb,
+            )
         else:
             sent = await msg.reply_video(
                 video=filepath, caption=caption,
@@ -578,7 +625,7 @@ async def handle_url(client, msg):
         return
     text = msg.text.strip()
 
-    # VK OAuth token URL — автоопределение
+    # VK OAuth token URL ??? ??????????????????????????????
     token_from_url = extract_vk_token_from_url(text)
     if token_from_url and 'blank.html' in text.lower():
         save_vk_token(token_from_url)
@@ -591,7 +638,7 @@ async def handle_url(client, msg):
 
     url = text
 
-    # Нормализация VK: vk.com/video-* -> vkvideo.ru/video-*
+    # ???????????????????????? VK: vk.com/video-* -> vkvideo.ru/video-*
     m_vk = re.match(r'https?://vk\.com/video([-\d_]+)', url)
     if m_vk:
         url = f'https://vkvideo.ru/video{m_vk.group(1)}'
@@ -635,7 +682,7 @@ async def handle_url(client, msg):
         await status_msg.edit_text(f"{EMOJIS['error']} {info['error']}")
         return
 
-    # Добавляем выбор "Audio" к любому видео
+    # ?????????????????? ?????????? "Audio" ?? ???????????? ??????????
     if info.get('platform') != 'vk_music':
         has_video = any(
             str(f.get('quality', '')).rstrip('p').isdigit() or f.get('height', 0) > 0
@@ -685,7 +732,7 @@ async def handle_callback(client, callback: CallbackQuery):
     raw = callback.data
     user = user_data.get(user_id, {})
 
-    # ── Кнопка показать/скрыть текст ──
+    # ?????? ???????????? ????????????????/???????????? ?????????? ??????
     if raw == 'show_lyrics':
         await callback.answer()
         artist = user.get('lyrics_artist', '')
@@ -744,7 +791,7 @@ async def handle_callback(client, callback: CallbackQuery):
             pass
         return
 
-    # ── Выбор качества ──
+    # ?????? ?????????? ???????????????? ??????
     if not user:
         await callback.answer('\u0421\u0435\u0441\u0441\u0438\u044f \u0438\u0441\u0442\u0435\u043a\u043b\u0430', show_alert=True)
         return
@@ -785,7 +832,7 @@ def _cleanup_temp_dir():
     if count:
         print(f"[VideoBot] \u043e\u0447\u0438\u0449\u0435\u043d\u043e {count} \u0444\u0430\u0439\u043b\u043e\u0432 \u0438\u0437 {resolved}")
 
-# ── Main ──
+# ?????? Main ??????
 
 
 class _H(http.server.BaseHTTPRequestHandler):
@@ -803,7 +850,7 @@ if __name__ == '__main__':
     else:
         print("[VideoBot] VK: \u0442\u043e\u043a\u0435\u043d \u043d\u0435 \u043d\u0430\u0439\u0434\u0435\u043d. \u0418\u0441\u043f\u043e\u043b\u044c\u0437\u0443\u0439\u0442\u0435 /login vk_token <\u0442\u043e\u043a\u0435\u043d>")
 
-    # ── Загрузка базы рабочих сайтов ──
+    # ?????? ???????????????? ???????? ?????????????? ???????????? ??????
     try:
         from working_sites_manager import load_good_tidal_urls, patch_tidal_apis, patch_spotify_metadata
         good = load_good_tidal_urls()
@@ -827,3 +874,4 @@ if __name__ == '__main__':
         print(f"[Bot] Health check skipped: {e}")
 
     app.run()
+

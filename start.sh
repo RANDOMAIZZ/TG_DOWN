@@ -47,4 +47,4 @@ else
     echo "[start.sh] yt-dlp not found, skipping EJS cache"
 fi
 
-PYTHONUNBUFFERED=1 exec python bot.py
+PYTHONUNBUFFERED=1 exec ./venv/bin/python bot.py

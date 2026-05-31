@@ -590,6 +590,12 @@ async def handle_url(client, msg):
         return
 
     url = text
+
+    # Нормализация VK: vk.com/video-* -> vkvideo.ru/video-*
+    m_vk = re.match(r'https?://vk\.com/video([-\d_]+)', url)
+    if m_vk:
+        url = f'https://vkvideo.ru/video{m_vk.group(1)}'
+
     platform = detect_platform(url)
     if platform == 'unknown':
         await msg.reply_text(f"{EMOJIS['error']} \u041d\u0435\u0440\u0430\u0441\u043f\u043e\u0437\u043d\u0430\u043d\u043d\u0430\u044f \u043f\u043b\u0430\u0442\u0444\u043e\u0440\u043c\u0430.")

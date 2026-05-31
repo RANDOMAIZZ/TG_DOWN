@@ -44,15 +44,12 @@ class YouTubeDownloader(BaseDownloader):
         try:
             info = await self.ytdlp_get_info(url, cookiefile=self.cookiefile, extra=self._yt_extra())
             if not info:
-                print(f"[YT] get_info: yt-dlp вернул None")
                 return {'error': 'Не удалось получить информацию', 'formats': []}
 
             title = info.get('title', 'video')
             duration = info.get('duration', 0)
-            print(f"[YT] get_info: title={title[:50]}, duration={duration}s")
 
             if is_short:
-                print(f"[YT] get_info: это Shorts, отдаём Auto")
                 return {
                     'platform': 'youtube_shorts',
                     'title': title,
@@ -64,7 +61,6 @@ class YouTubeDownloader(BaseDownloader):
                 }
 
             formats = self.parse_video_formats(info)
-            print(f"[YT] get_info: {len(formats)} форматов")
             return {
                 'platform': 'youtube',
                 'title': title,
@@ -78,6 +74,13 @@ class YouTubeDownloader(BaseDownloader):
 
     async def download(self, url: str, format_id: str, progress_queue=None) -> tuple:
         print(f"[YT] download: format={format_id}, url={url[:60]}")
-        result = await self.ytdlp_download(url, format_id, progress_queue, cookiefile=self.cookiefile, extra=self._yt_extra())
+
+        # При неудаче с конкретным format_id пробуем best
+        extra = self._yt_extra()
+        result = await self.ytdlp_download(url, format_id, progress_queue, cookiefile=self.cookiefile, extra=extra)
+        if result[0] is None:
+            print(f"[YT] download: format_id не сработал, пробую best")
+            result = await self.ytdlp_download(url, 'best', progress_queue, cookiefile=self.cookiefile, extra=extra)
+
         print(f"[YT] download result: path={'OK' if result[0] else 'FAIL'}, title={result[1][:50] if result[1] else 'None'}")
         return result

@@ -1,13 +1,6 @@
 from .base import BaseDownloader
 from typing import Dict
 import os
-import asyncio
-import yt_dlp
-
-QUALITY_MAP = {
-    '144p': 144, '240p': 240, '360p': 360, '480p': 480,
-    '720p': 720, '1080p': 1080, '1440p': 1440, '2160p': 2160,
-}
 
 
 class YouTubeDownloader(BaseDownloader):
@@ -44,15 +37,6 @@ class YouTubeDownloader(BaseDownloader):
         print(f"[YT] detect_url({url[:60]}): {found}")
         return found
 
-    def _build_fallback_formats(self):
-        return [
-            {'format_id': '2160p', 'quality': '2160p', 'height': 2160},
-            {'format_id': '1080p', 'quality': '1080p', 'height': 1080},
-            {'format_id': '720p', 'quality': '720p', 'height': 720},
-            {'format_id': '480p', 'quality': '480p', 'height': 480},
-            {'format_id': '360p', 'quality': '360p', 'height': 360},
-        ]
-
     async def get_info(self, url: str) -> Dict:
         is_short = '/shorts/' in url.lower()
         print(f"[YT] get_info: {url[:60]} (shorts={is_short})")
@@ -60,61 +44,40 @@ class YouTubeDownloader(BaseDownloader):
         try:
             info = await self.ytdlp_get_info(url, cookiefile=self.cookiefile, extra=self._yt_extra())
             if not info:
-                return {'platform': 'youtube', 'title': 'YouTube Video', 'duration': 0,
-                        'is_short': is_short, 'formats': self._build_fallback_formats()}
+                print(f"[YT] get_info: yt-dlp вернул None")
+                return {'error': 'Не удалось получить информацию', 'formats': []}
 
             title = info.get('title', 'video')
             duration = info.get('duration', 0)
+            print(f"[YT] get_info: title={title[:50]}, duration={duration}s")
 
             if is_short:
+                print(f"[YT] get_info: это Shorts, отдаём Auto")
                 return {
                     'platform': 'youtube_shorts',
-                    'title': title, 'duration': duration, 'is_short': True,
+                    'title': title,
+                    'duration': duration,
+                    'is_short': True,
                     'formats': [{'format_id': 'best', 'quality': 'Auto'}],
                     'artist': info.get('artist') or info.get('channel', '') or info.get('uploader', ''),
                     'track': info.get('track') or title,
                 }
 
             formats = self.parse_video_formats(info)
-            if not formats:
-                formats = self._build_fallback_formats()
+            print(f"[YT] get_info: {len(formats)} форматов")
             return {
-                'platform': 'youtube', 'title': title, 'duration': duration,
-                'is_short': False, 'formats': formats,
+                'platform': 'youtube',
+                'title': title,
+                'duration': duration,
+                'is_short': False,
+                'formats': formats,
             }
         except Exception as e:
             print(f"[YT] get_info error: {e}")
-            return {'platform': 'youtube', 'title': 'YouTube Video', 'duration': 0,
-                    'is_short': is_short, 'formats': self._build_fallback_formats()}
+            return {'error': str(e), 'formats': []}
 
     async def download(self, url: str, format_id: str, progress_queue=None) -> tuple:
         print(f"[YT] download: format={format_id}, url={url[:60]}")
-
-        loop = asyncio.get_event_loop()
-
-        def _sync():
-            outtmpl, tag = self.unique_outtmpl()
-            opts = {
-                'quiet': True, 'no_warnings': True,
-                'outtmpl': outtmpl,
-                'format': 'best',
-                'merge_output_format': 'mp4',
-                'http_headers': {'User-Agent': self.user_agent},
-                'retries': 5, 'fragment_retries': 5, 'socket_timeout': 60,
-            }
-
-            with yt_dlp.YoutubeDL(opts) as ydl:
-                info = ydl.extract_info(url, download=True)
-                if not info:
-                    return None, 'Не удалось скачать'
-                if info.get('_type') == 'playlist' and info.get('entries'):
-                    info = info['entries'][0] or info
-                title = (info.get('title') or info.get('track') or 'media')[:80]
-                path = self.resolve_downloaded_file(info, ydl, tag)
-                if path:
-                    return path, title
-                return None, 'Файл не найден после загрузки'
-
-        result = await loop.run_in_executor(None, _sync)
+        result = await self.ytdlp_download(url, format_id, progress_queue, cookiefile=self.cookiefile, extra=self._yt_extra())
         print(f"[YT] download result: path={'OK' if result[0] else 'FAIL'}, title={result[1][:50] if result[1] else 'None'}")
         return result

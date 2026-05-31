@@ -14,4 +14,4 @@ if [ -d /data ]; then
     mkdir -p /data/downloads
 fi
 
-exec python bot.py
+PYTHONUNBUFFERED=1 exec python bot.py

@@ -6,8 +6,6 @@ import uuid
 import queue
 import time
 import asyncio
-import threading
-import http.server
 
 # Python 3.14+ fix: pyrogram async_to_sync needs an event loop at import time
 try:
@@ -808,11 +806,5 @@ if __name__ == '__main__':
         print(f"[WS] \u043e\u0448\u0438\u0431\u043a\u0430 \u0437\u0430\u0433\u0440\u0443\u0437\u043a\u0438: {e}")
     _cleanup_temp_dir()
     print("[VideoBot] Bot started! MTProto (2 GB limit)")
-
-    # Health check для Render Web Service
-    class _H(http.server.BaseHTTPRequestHandler):
-        def do_GET(self): self.send_response(200); self.end_headers(); self.wfile.write(b'OK')
-        def log_message(self, *a): pass
-    threading.Thread(target=http.server.HTTPServer(('0.0.0.0', 10000), _H).serve_forever, daemon=True).start()
 
     app.run()
